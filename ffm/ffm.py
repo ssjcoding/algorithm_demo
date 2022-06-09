@@ -15,7 +15,8 @@ class CrossLayer(keras.layers.Layer):
         self.field_dim = field_dim
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.field_cross = None
+        self.field_cross = K.variable(0, dtype='float32')
+        self.field_cross_origin = K.variable(0, dtype='float32')
         super(CrossLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
@@ -26,7 +27,7 @@ class CrossLayer(keras.layers.Layer):
         super(CrossLayer, self).build(input_shape)
 
     def call(self, x):
-        self.field_cross = K.variable(0, dtype='float32')
+        self.field_cross = self.field_cross_origin
         for i in range(self.input_dim):
             for j in range(i+1, self.input_dim):
                 weight = tf.math.reduce_sum(tf.math.multiply(self.kernel[i, self.field_dict[j]], self.kernel[j, self.field_dict[i]]))
@@ -55,6 +56,7 @@ def FFM(feature_dim, field_dict, field_dim, output_dim=30):
 def train():
     field_dict = {i:i//5 for i in range(30)}
     ffm = FFM(30, field_dict, 6, 30)
+    ffm.summary()
     data = load_breast_cancer()
     X_train, X_test, y_train, y_test = train_test_split(data.data, data.target, test_size=0.2,
                                                         random_state=27, stratify=data.target)
